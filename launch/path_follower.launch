@@ -1,8 +1,8 @@
 <launch>
 
-  <arg name="odomTopic"/>
-  <arg name="commandTopic"/>
-  <arg name="trackingDis"/>
+  <arg name="odomTopic" default="/state_estimator/pose_in_odom"/>
+  <arg name="commandTopic" default="/local_guidance_path_follower/twist"/>
+  <arg name="trackingDis" default="0.5"/>
   <arg name="sensorOffsetX" default="0"/>
   <arg name="sensorOffsetY" default="0"/>
   <arg name="twoWayDrive" default="false"/>
@@ -11,6 +11,8 @@
   <arg name="autonomyMode" default="false"/>
   <arg name="autonomySpeed" default="0.75"/>
   <arg name="joyToSpeedDelay" default="2.0"/>
+
+  <include file="$(find ps3joy)/launch/ps3.launch" />
 
   <node pkg="dvf_path_follow" type="dvf_path_follow" name="dvf_path_follow" output="screen" required="true">
     <param name="sensorOffsetX" value="$(arg sensorOffsetX)" />
