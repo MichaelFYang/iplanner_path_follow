@@ -20,7 +20,7 @@
     <param name="pubSkipNum" type="int" value="1" />
     <param name="twoWayDrive" value="$(arg twoWayDrive)" />
     <param name="lookAheadDis" type="double" value="$(arg trackingDis)" />
-    <param name="headingAheadDis" type="double" value="$(eval 4.5*arg('trackingDis'))" />
+    <param name="headingAheadDis" type="double" value="$(eval 2.0*arg('trackingDis'))" />
     <param name="yRateGain" type="double" value="1.4" />
     <param name="yawRateGain" type="double" value="3.5" />
     <param name="stopYawRateGain" type="double" value="3.5" />
