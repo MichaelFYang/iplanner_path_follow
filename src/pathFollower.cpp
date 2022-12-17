@@ -37,8 +37,6 @@ int pubSkipNum = 1;
 int pubSkipCount = 0;
 bool twoWayDrive = true;
 double lookAheadDis = 0.5;
-double headingAheadDis = 2.0;
-double yRateGain = 1.5;
 double yawRateGain = 7.5;
 double stopYawRateGain = 7.5;
 double maxYawRate = 45.0;
@@ -90,7 +88,6 @@ double joyTime = 0;
 double slowInitTime = 0;
 double stopInitTime = false;
 int pathPointID = 0;
-int pathHeadingID = 0;
 bool pathInit = false;
 bool navFwd = true;
 double switchTime = 0;
@@ -111,8 +108,8 @@ void odomHandler(const geometry_msgs::PoseWithCovarianceStampedConstPtr& odomIn)
   vehicleRoll = roll;
   vehiclePitch = pitch;
   vehicleYaw = yaw;
-  vehicleX = odomIn->pose.pose.position.x - cos(yaw) * sensorOffsetX + sin(yaw) * sensorOffsetY;
-  vehicleY = odomIn->pose.pose.position.y - sin(yaw) * sensorOffsetX - cos(yaw) * sensorOffsetY;
+  vehicleX = odomIn->pose.pose.position.x;
+  vehicleY = odomIn->pose.pose.position.y;
   vehicleZ = odomIn->pose.pose.position.z;
 
   if ((fabs(roll) > inclThre * PI / 180.0 || fabs(pitch) > inclThre * PI / 180.0) && useInclToStop) {
@@ -138,7 +135,6 @@ void pathHandler(const nav_msgs::Path::ConstPtr& pathIn)
   vehicleYawRec = vehicleYaw;
 
   pathPointID = 0;
-  pathHeadingID = 0;
   pathInit = true;
 }
 
@@ -193,8 +189,6 @@ int main(int argc, char** argv)
   nhPrivate.getParam("pubSkipNum", pubSkipNum);
   nhPrivate.getParam("twoWayDrive", twoWayDrive);
   nhPrivate.getParam("lookAheadDis", lookAheadDis);
-  nhPrivate.getParam("headingAheadDis", headingAheadDis);
-  nhPrivate.getParam("yRateGain", yRateGain);
   nhPrivate.getParam("yawRateGain", yawRateGain);
   nhPrivate.getParam("stopYawRateGain", stopYawRateGain);
   nhPrivate.getParam("maxYawRate", maxYawRate);
@@ -220,6 +214,8 @@ int main(int argc, char** argv)
   nhPrivate.getParam("joyToSpeedDelay", joyToSpeedDelay);
   nhPrivate.getParam("odomTopic", odomTopic);
   nhPrivate.getParam("commandTopic", commandTopic);
+
+  lookAheadDis += std::hypot(sensorOffsetX, sensorOffsetY);
 
   ros::Subscriber subOdom = nh.subscribe<geometry_msgs::PoseWithCovarianceStamped> (odomTopic, 5, odomHandler);
 
@@ -258,19 +254,13 @@ int main(int argc, char** argv)
       float endDisY = path.poses[pathSize - 1].pose.position.y - vehicleYRel;
       float endDis = sqrt(endDisX * endDisX + endDisY * endDisY);
 
-      float disX, disY, headingX, headingY, dis;
-      while (pathPointID < pathSize - 1 && pathHeadingID < pathSize - 1) {
+      float disX, disY, dis;
+      while (pathPointID < pathSize - 1) {
         disX = path.poses[pathPointID].pose.position.x - vehicleXRel;
         disY = path.poses[pathPointID].pose.position.y - vehicleYRel;
         dis = sqrt(disX * disX + disY * disY);
         if (dis < lookAheadDis) {
           pathPointID++;
-        }
-        disX = path.poses[pathHeadingID].pose.position.x - vehicleXRel;
-        disY = path.poses[pathHeadingID].pose.position.y - vehicleYRel;
-        dis = sqrt(disX * disX + disY * disY); 
-        if (dis < headingAheadDis) {
-          pathHeadingID++;
         } else {
           break;
         }
@@ -278,25 +268,14 @@ int main(int argc, char** argv)
 
       disX = path.poses[pathPointID].pose.position.x - vehicleXRel;
       disY = path.poses[pathPointID].pose.position.y - vehicleYRel;
-      headingX = path.poses[pathHeadingID].pose.position.x - vehicleXRel;
-      headingY = path.poses[pathHeadingID].pose.position.y - vehicleYRel;
-      
       dis = sqrt(disX * disX + disY * disY);
-      float ctrlDir = atan2(disY, disX);
+      float pathDir = atan2(disY, disX);
 
-      float pathDir = atan2(headingY, headingX);
       float dirDiff = vehicleYaw - vehicleYawRec - pathDir;
       if (dirDiff > PI) dirDiff -= 2 * PI;
       else if (dirDiff < -PI) dirDiff += 2 * PI;
       if (dirDiff > PI) dirDiff -= 2 * PI;
       else if (dirDiff < -PI) dirDiff += 2 * PI;
-
-      float ctrlDiff = vehicleYaw - vehicleYawRec - ctrlDir;
-      if (ctrlDiff > PI) ctrlDir -= 2 * PI;
-      else if (ctrlDiff < -PI) ctrlDiff += 2 * PI;
-      if (ctrlDiff > PI) ctrlDir -= 2 * PI;
-      else if (ctrlDiff < -PI) ctrlDiff += 2 * PI;
-
 
       if (twoWayDrive) {
         double time = ros::Time::now().toSec();
@@ -357,15 +336,8 @@ int main(int argc, char** argv)
       pubSkipCount--;
       if (pubSkipCount < 0) {
         cmd_vel.header.stamp = ros::Time().fromSec(odomTime);
-        if (fabs(vehicleSpeed) <= maxAccel / 100.0) {
-          cmd_vel.twist.linear.x = 0;
-          cmd_vel.twist.linear.y = 0;
-        }
-        else {
-          cmd_vel.twist.linear.x = vehicleSpeed * cos(ctrlDiff);
-          cmd_vel.twist.linear.y = - yRateGain * vehicleSpeed * sin(ctrlDiff);
-        }
-        // cmd_vel.twist.linear.y = 0.5;
+        if (fabs(vehicleSpeed) <= maxAccel / 100.0) cmd_vel.twist.linear.x = 0;
+        else cmd_vel.twist.linear.x = vehicleSpeed;
         cmd_vel.twist.angular.z = vehicleYawRate;
         pubSpeed.publish(cmd_vel);
 
