@@ -94,10 +94,31 @@ double switchTime = 0;
 
 std::string odomTopic = "/state_estimation";
 std::string commandTopic = "/cmd_vel";
+std::string baseFrame = "base";
 
 nav_msgs::Path path;
 
 void odomHandler(const geometry_msgs::PoseWithCovarianceStampedConstPtr& odomIn)
+{
+  odomTime = odomIn->header.stamp.toSec();
+
+  double roll, pitch, yaw;
+  geometry_msgs::Quaternion geoQuat = odomIn->pose.pose.orientation;
+  tf::Matrix3x3(tf::Quaternion(geoQuat.x, geoQuat.y, geoQuat.z, geoQuat.w)).getRPY(roll, pitch, yaw);
+
+  vehicleRoll = roll;
+  vehiclePitch = pitch;
+  vehicleYaw = yaw;
+  vehicleX = odomIn->pose.pose.position.x;
+  vehicleY = odomIn->pose.pose.position.y;
+  vehicleZ = odomIn->pose.pose.position.z;
+
+  if ((fabs(roll) > inclThre * PI / 180.0 || fabs(pitch) > inclThre * PI / 180.0) && useInclToStop) {
+    stopInitTime = odomIn->header.stamp.toSec();
+  }
+}
+
+void odomHandler(const nav_msgs::OdometryConstPtr& odomIn)
 {
   odomTime = odomIn->header.stamp.toSec();
 
@@ -217,7 +238,9 @@ int main(int argc, char** argv)
 
   lookAheadDis += std::hypot(sensorOffsetX, sensorOffsetY);
 
-  ros::Subscriber subOdom = nh.subscribe<geometry_msgs::PoseWithCovarianceStamped> (odomTopic, 5, odomHandler);
+  // ros::Subscriber subOdom = nh.subscribe<geometry_msgs::PoseWithCovarianceStamped> (odomTopic, 5, odomHandler);
+
+  ros::Subscriber subOdom = nh.subscribe<nav_msgs::Odometry> (odomTopic, 5, odomHandler);
 
   ros::Subscriber subPath = nh.subscribe<nav_msgs::Path> ("/path", 5, pathHandler);
 
@@ -228,8 +251,10 @@ int main(int argc, char** argv)
   ros::Subscriber subStop = nh.subscribe<std_msgs::Int8> ("/stop", 5, stopHandler);
 
   ros::Publisher pubSpeed = nh.advertise<geometry_msgs::TwistStamped> (commandTopic, 5);
+
   geometry_msgs::TwistStamped cmd_vel;
-  cmd_vel.header.frame_id = "base";
+  
+  cmd_vel.header.frame_id = baseFrame;
 
   if (autonomyMode) {
     joySpeed = autonomySpeed / maxSpeed;
