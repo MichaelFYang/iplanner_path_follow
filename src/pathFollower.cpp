@@ -268,7 +268,7 @@ int main(int argc, char** argv)
   while (status) {
     ros::spinOnce();
 
-    if (pathInit) {
+    if (pathInit && (!path.poses.empty())) {
       float vehicleXRel = cos(vehicleYawRec) * (vehicleX - vehicleXRec) 
                         + sin(vehicleYawRec) * (vehicleY - vehicleYRec);
       float vehicleYRel = -sin(vehicleYawRec) * (vehicleX - vehicleXRec) 
@@ -368,6 +368,11 @@ int main(int argc, char** argv)
 
         pubSkipCount = pubSkipNum;
       }
+    } else if (pathInit && path.poses.empty()) {
+        cmd_vel.header.stamp = ros::Time().fromSec(odomTime);
+        cmd_vel.twist.linear.x = 0;
+        cmd_vel.twist.angular.z = 0;
+        pubSpeed.publish(cmd_vel);
     }
 
     status = ros::ok();
