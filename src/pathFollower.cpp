@@ -30,6 +30,7 @@
 using namespace std;
 
 const double PI = 3.1415926;
+const double EPS = 1e-5;
 
 double sensorOffsetX = 0;
 double sensorOffsetY = 0;
@@ -83,7 +84,8 @@ float vehicleYawRec = 0;
 float vehicleYawRate = 0;
 float vehicleSpeed = 0;
 
-double offsetDiffdir = PI / 4.0;
+double dirMomentum = 0.5;
+double lastDiffDir = 0;
 double odomTime = 0;
 double joyTime = 0;
 double slowInitTime = 0;
@@ -297,9 +299,11 @@ int main(int argc, char** argv)
       dis = sqrt(disX * disX + disY * disY);
       float pathDir = atan2(disY, disX);
 
-      float dirDiff = vehicleYaw - vehicleYawRec - pathDir;
-      if (dirDiff > PI + offsetDiffdir) dirDiff -= 2 * PI;
-      else if (dirDiff < -PI + offsetDiffdir) dirDiff += 2 * PI;
+      double dirDiff = vehicleYaw - vehicleYawRec - pathDir;
+      if (dirDiff > PI) dirDiff -= 2 * PI;
+      else if (dirDiff < -PI) dirDiff += 2 * PI;
+      if (dirDiff > PI) dirDiff -= 2 * PI;
+      else if (dirDiff < -PI) dirDiff += 2 * PI;
 
       if (twoWayDrive) {
         double time = ros::Time::now().toSec();
@@ -318,6 +322,13 @@ int main(int argc, char** argv)
         if (dirDiff > PI) dirDiff -= 2 * PI;
         joySpeed2 *= -1;
       }
+
+      // Add momentum to dirDiff
+      if (fabs(dirDiff) > dirDiffThre) {
+        dirDiff = dirDiff + dirMomentum * lastDiffDir;
+        dirDiff = std::max(std::min(dirDiff, PI-EPS), -PI+EPS);
+      }
+      lastDiffDir = dirDiff;
 
       if (fabs(vehicleSpeed) < 2.0 * maxAccel / 100.0) vehicleYawRate = -stopYawRateGain * dirDiff;
       else vehicleYawRate = -yawRateGain * dirDiff;
