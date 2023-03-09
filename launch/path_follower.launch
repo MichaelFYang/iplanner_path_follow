@@ -1,7 +1,5 @@
 <launch>
 
-  <!-- <arg name="odomTopic" default="/state_estimator/pose_in_odom"/>
-  <arg name="commandTopic" default="/local_guidance_path_follower/twist"/> -->
   <arg name="odomTopic" default="/state_estimation"/>
   <arg name="commandTopic" default="/cmd_vel"/>
   
@@ -17,7 +15,7 @@
 
   <include file="$(find ps3joy)/launch/ps3.launch" />
 
-  <node pkg="dvf_path_follow" type="dvf_path_follow" name="dvf_path_follow" output="screen" required="true">
+  <node pkg="iplanner_path_follow" type="iplanner_path_follow" name="iplanner_path_follow" output="screen" required="true">
     <param name="sensorOffsetX" value="$(arg sensorOffsetX)" />
     <param name="sensorOffsetY" value="$(arg sensorOffsetY)" />
     <param name="pubSkipNum" type="int" value="1" />

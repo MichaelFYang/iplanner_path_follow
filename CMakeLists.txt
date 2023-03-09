@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 2.8.3)
-project(dvf_path_follow)
+project(iplanner_path_follow)
 
 set(CMAKE_BUILD_TYPE Release)
 set(BUILD_STATIC_LIBS ON)
@@ -49,12 +49,12 @@ link_directories(
 )
 
 ## Declare executables
-add_executable(dvf_path_follow src/pathFollower.cpp)
+add_executable(iplanner_path_follow src/pathFollower.cpp)
 
 ## Specify libraries to link a library or executable target against
-target_link_libraries(dvf_path_follow ${catkin_LIBRARIES} ${PCL_LIBRARIES})
+target_link_libraries(iplanner_path_follow ${catkin_LIBRARIES} ${PCL_LIBRARIES})
 
-install(TARGETS dvf_path_follow
+install(TARGETS iplanner_path_follow
   ARCHIVE DESTINATION ${CATKIN_PACKAGE_LIB_DESTINATION}
   LIBRARY DESTINATION ${CATKIN_PACKAGE_LIB_DESTINATION}
   RUNTIME DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION}

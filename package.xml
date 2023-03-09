@@ -1,7 +1,7 @@
 <package>
-  <name>dvf_path_follow</name>
+  <name>iplanner_path_follow</name>
   <version>0.0.1</version>
-  <description>Path Follower for DVF Planner</description>
+  <description>Path Follower for iPlanner</description>
   <author email="zhangji@cmu.edu">Ji Zhang</author>
   <maintainer email="fanyang1@ethz.ch">Fan Yang</maintainer>
   <license>BSD</license>

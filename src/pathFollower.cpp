@@ -83,6 +83,7 @@ float vehicleYawRec = 0;
 float vehicleYawRate = 0;
 float vehicleSpeed = 0;
 
+double offsetDiffdir = PI / 4.0;
 double odomTime = 0;
 double joyTime = 0;
 double slowInitTime = 0;
@@ -297,10 +298,8 @@ int main(int argc, char** argv)
       float pathDir = atan2(disY, disX);
 
       float dirDiff = vehicleYaw - vehicleYawRec - pathDir;
-      if (dirDiff > PI) dirDiff -= 2 * PI;
-      else if (dirDiff < -PI) dirDiff += 2 * PI;
-      if (dirDiff > PI) dirDiff -= 2 * PI;
-      else if (dirDiff < -PI) dirDiff += 2 * PI;
+      if (dirDiff > PI + offsetDiffdir) dirDiff -= 2 * PI;
+      else if (dirDiff < -PI + offsetDiffdir) dirDiff += 2 * PI;
 
       if (twoWayDrive) {
         double time = ros::Time::now().toSec();
