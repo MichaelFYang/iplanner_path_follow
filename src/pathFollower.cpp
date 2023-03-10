@@ -84,7 +84,7 @@ float vehicleYawRec = 0;
 float vehicleYawRate = 0;
 float vehicleSpeed = 0;
 
-double dirMomentum = 0.75;
+double dirMomentum = 0.5;
 double lastDiffDir = 0;
 double odomTime = 0;
 double joyTime = 0;
