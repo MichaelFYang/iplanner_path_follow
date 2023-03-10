@@ -329,9 +329,10 @@ int main(int argc, char** argv)
         else if (lastDiffDir - dirDiff < -PI) dirDiff -= 2 * PI;
         dirDiff = (1.0 - dirMomentum) * dirDiff + dirMomentum * lastDiffDir;
         dirDiff = std::max(std::min(dirDiff, PI-EPS), -PI+EPS);
-        
+        lastDiffDir = dirDiff;
+      } else {
+        lastDiffDir = 0.0;
       }
-      lastDiffDir = dirDiff;
 
       if (fabs(vehicleSpeed) < 2.0 * maxAccel / 100.0) vehicleYawRate = -stopYawRateGain * dirDiff;
       else vehicleYawRate = -yawRateGain * dirDiff;
