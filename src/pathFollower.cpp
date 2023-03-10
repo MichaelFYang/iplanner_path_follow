@@ -84,7 +84,7 @@ float vehicleYawRec = 0;
 float vehicleYawRate = 0;
 float vehicleSpeed = 0;
 
-double dirMomentum = 0.5;
+double dirMomentum = 0.75;
 double lastDiffDir = 0;
 double odomTime = 0;
 double joyTime = 0;
@@ -324,9 +324,12 @@ int main(int argc, char** argv)
       }
 
       // Add momentum to dirDiff
-      if (fabs(dirDiff) > dirDiffThre) {
-        dirDiff = dirDiff + dirMomentum * lastDiffDir;
+      if (fabs(dirDiff) > dirDiffThre - EPS) {
+        if (lastDiffDir - dirDiff > PI) dirDiff += 2 * PI;
+        else if (lastDiffDir - dirDiff < -PI) dirDiff -= 2 * PI;
+        dirDiff = (1.0 - dirMomentum) * dirDiff + dirMomentum * lastDiffDir;
         dirDiff = std::max(std::min(dirDiff, PI-EPS), -PI+EPS);
+        
       }
       lastDiffDir = dirDiff;
 
