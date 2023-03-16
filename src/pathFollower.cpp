@@ -324,7 +324,7 @@ int main(int argc, char** argv)
       }
 
       // Add momentum to dirDiff
-      if (fabs(dirDiff) > dirDiffThre - EPS) {
+      if (fabs(dirDiff) > dirDiffThre - EPS && dis > lookAheadDis + EPS) {
         if (lastDiffDir - dirDiff > PI) dirDiff += 2 * PI;
         else if (lastDiffDir - dirDiff < -PI) dirDiff -= 2 * PI;
         dirDiff = (1.0 - dirMomentum) * dirDiff + dirMomentum * lastDiffDir;
